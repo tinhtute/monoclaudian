@@ -1,36 +1,57 @@
-# Claude Code Setup
+# monoclaudian
 
-Bootstrap kit for a new machine. Installs global `~/.claude/` config from this repo.
+Claude Code–specific setup for a new machine: global `CLAUDE.md`, rules, the `settings.json` template, the agent model policy, Claude mods, the statusline, and the `test-runner` agent. `install.sh` installs them into `~/.claude/`.
+
+The portable harness (skills, the `zharness` CLI, the `.harness/` protocol, and the `mono-lead` / `mono-worker` / `mono-verifier` agents) lives in [monoharness](https://github.com/tinhtute/monoharness). This repository only holds what is specific to Claude Code.
 
 ## Quick start
 
 ```bash
-bash setup/install.sh
+bash install.sh
 ```
 
 After install: edit `~/.claude/settings.json` → set `ANTHROPIC_AUTH_TOKEN`.
 
+`install.sh` also installs the harness skills from monoharness with `npx skills add git@github.com:tinhtute/monoharness.git`. It does not install the harness agents; run monoharness's `scripts/install-agents.sh` from a monoharness checkout for those.
+
 ## Contents
 
-| File | Installed to | Notes |
+| Path | Installed to | Notes |
 | :--- | :--- | :--- |
 | `CLAUDE.md` | `~/.claude/CLAUDE.md` | Voice, hard rules, working style |
-| `settings.json` | `~/.claude/settings.json` | Template; only copied if file doesn't exist |
-| `statusline/` | `~/.claude/statusline.{sh,py}` | Statusline installers, run by `install.sh` (slim) or by hand (`setup-pulse.sh`) |
-| `install-git-hooks.sh` | `.git/hooks/` of this repo | Pre-commit/pre-push guards; not run by `install.sh` |
 | `rules/*.md` | `~/.claude/rules/` | English coaching; retires rules folded into `CLAUDE.md` |
+| `settings.json` | `~/.claude/settings.json` | Template; only copied if the file doesn't exist |
+| `agents/test-runner.md` | `~/.claude/agents/` | Read-only agent that runs a named suite and returns only failures |
+| `models.json` | not installed | Role → model policy for `agents/*.md`, checked by `scripts/test-agent-models.sh` |
+| `mods/` | `~/.claude/mods/` | `ninja-kit` and `cache-guard`, loaded through `CLAUDE_CODE_PLUGIN_DIRS` |
+| `statusline/` | `~/.claude/statusline.{sh,py}` | Statusline installers, run by `install.sh` (slim) or by hand (`setup-pulse.sh`) |
 
 ## Prerequisites
 
 - **Node.js** v18+ (required by `npx skills add` in `install.sh`)
-- **jq** (required by statusline) — `brew install jq` or `apt install jq`
+- **jq** (required by the statusline and `scripts/test-agent-models.sh`) — `brew install jq` or `apt install jq`
 - SSH key configured for `git@github.com:tinhtute/monoharness.git`
 
-## Hooks overview
+## Mods
 
-Tool guards (`rm` → `trash`, sensitive files, private URLs to web tools) and the compaction rule reminder live in the `ninja-kit` Claude mod (`setup/mods/ninja-kit`, installed to `~/.claude/mods/ninja-kit` and loaded through `CLAUDE_CODE_PLUGIN_DIRS`); test it with `claude plugin test setup/mods/ninja-kit`.
+`ninja-kit` holds the tool guards (`rm` → `trash`, sensitive files, private URLs to web tools), the compaction rule reminder, and an active-plan footer. Test it with `claude plugin test mods/ninja-kit`.
 
-The `cache-guard` mod (`setup/mods/cache-guard`, installed and loaded the same way) shows a band above the prompt when the model or effort changes while context is at or above `threshold` percent (default 40, set under `pluginConfigs."cache-guard".options`), with Compact and Skip buttons, because the switch drops the prompt cache; test it with `claude plugin test setup/mods/cache-guard`.
+The footer reads plans from the hardcoded path `.harness/plans/active` in the current repository. That is the zharness plan layout from [monoharness](https://github.com/tinhtute/monoharness); in a repository without that layout the footer shows nothing. The path is not configurable.
 
+`cache-guard` shows a band above the prompt when the model or effort changes while context is at or above `threshold` percent (default 40, set under `pluginConfigs."cache-guard".options`), with Compact and Skip buttons, because the switch drops the prompt cache. Test it with `claude plugin test mods/cache-guard`.
+
+## Checks
+
+CI (`.github/workflows/ci.yml`) runs on push and pull request to `master`:
+
+```bash
+# mods: pure rule tests (register.test.ts and band.test.tsx need the private
+# claude-code/testing kit and run only via `claude plugin test`)
+(cd mods/ninja-kit && bun test hooks/rules.spec.ts)
+(cd mods/cache-guard && bun test hooks/rules.spec.ts)
+
+# agent-models: models.json matches agents/*.md frontmatter
+bash scripts/test-agent-models.sh
+```
 
 from therealTINHTUTE with love

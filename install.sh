@@ -3,17 +3,17 @@
 # Safe to run multiple times. Backs up files before overwriting.
 #
 # Usage:
-#   bash setup/install.sh
+#   bash install.sh
 #
 # What this does:
-#   1. Copies CLAUDE.md, rules/, agents/, mods/ (all under setup/) to ~/.claude/
+#   1. Copies CLAUDE.md, rules/, agents/ (test-runner), mods/ to ~/.claude/
 #   2. Installs statusline
 #   3. Handles settings.json (copy if new, show diff if existing)
 #   4. Installs all skills via npx skills add
 
 set -euo pipefail
 
-REPO_DIR="$(cd "$(dirname "$0")/.." && pwd)"
+REPO_DIR="$(cd "$(dirname "$0")" && pwd)"
 CLAUDE_DIR="$HOME/.claude"
 TIMESTAMP="$(date +%Y%m%d_%H%M%S)"
 
@@ -52,11 +52,11 @@ mkdir -p "$CLAUDE_DIR/rules"
 green "✓ Directories ready"
 
 # --- Step 2: CLAUDE.md ---
-sync_file "$REPO_DIR/setup/CLAUDE.md" "$CLAUDE_DIR/CLAUDE.md"
+sync_file "$REPO_DIR/CLAUDE.md" "$CLAUDE_DIR/CLAUDE.md"
 green "✓ CLAUDE.md installed"
 
 # --- Step 3: Rules ---
-for f in "$REPO_DIR/setup/rules/"*.md; do
+for f in "$REPO_DIR/rules/"*.md; do
   [ -f "$f" ] || continue
   sync_file "$f" "$CLAUDE_DIR/rules/$(basename "$f")"
 done
@@ -69,20 +69,20 @@ for name in ask-user-question execution-discipline karpathy-guidelines workflow-
 done
 green "✓ Rules installed ($(ls "$CLAUDE_DIR/rules/"*.md 2>/dev/null | wc -l | tr -d ' ') files)"
 
-# --- Step 4b: Agents (role -> model policy: setup/models.json) ---
+# --- Step 4b: Agents (role -> model policy: models.json; harness agents come from monoharness scripts/install-agents.sh) ---
 mkdir -p "$CLAUDE_DIR/agents"
-for f in "$REPO_DIR/setup/agents/"*.md; do
+for f in "$REPO_DIR/agents/"*.md; do
   [ -f "$f" ] || continue
   sync_file "$f" "$CLAUDE_DIR/agents/$(basename "$f")"
 done
 green "✓ Agents installed"
 
 # --- Step 4c: Claude mods (loaded via CLAUDE_CODE_PLUGIN_DIRS) ---
-( cd "$REPO_DIR/setup/mods" && find . -type f ! -path '*/.claude-plugin/types/*' ) | while read -r f; do
+( cd "$REPO_DIR/mods" && find . -type f ! -path '*/.claude-plugin/types/*' ) | while read -r f; do
   mkdir -p "$(dirname "$CLAUDE_DIR/mods/$f")"
-  sync_file "$REPO_DIR/setup/mods/$f" "$CLAUDE_DIR/mods/$f"
+  sync_file "$REPO_DIR/mods/$f" "$CLAUDE_DIR/mods/$f"
 done
-green "✓ Mods installed ($(ls "$REPO_DIR/setup/mods" | tr '\n' ' '))"
+green "✓ Mods installed ($(ls "$REPO_DIR/mods" | tr '\n' ' '))"
 
 # --- Step 5: settings.json ---
 if [ -f "$CLAUDE_DIR/settings.json" ]; then
@@ -90,17 +90,17 @@ if [ -f "$CLAUDE_DIR/settings.json" ]; then
   yellow "⚠  settings.json already exists — not overwriting."
   yellow "   Review the diff below and manually merge new fields:"
   yellow ""
-  diff "$REPO_DIR/setup/settings.json" "$CLAUDE_DIR/settings.json" || true
+  diff "$REPO_DIR/settings.json" "$CLAUDE_DIR/settings.json" || true
   yellow ""
-  yellow "   Template: $REPO_DIR/setup/settings.json"
+  yellow "   Template: $REPO_DIR/settings.json"
   yellow "   Live:     $CLAUDE_DIR/settings.json"
 else
-  cp "$REPO_DIR/setup/settings.json" "$CLAUDE_DIR/settings.json"
+  cp "$REPO_DIR/settings.json" "$CLAUDE_DIR/settings.json"
   green "✓ settings.json installed"
   yellow ""
   yellow "  → Edit $CLAUDE_DIR/settings.json"
   yellow "     Set ANTHROPIC_AUTH_TOKEN to your actual token."
-  if grep -q "kypicc.spendchai.com" "$REPO_DIR/setup/settings.json" 2>/dev/null; then
+  if grep -q "kypicc.spendchai.com" "$REPO_DIR/settings.json" 2>/dev/null; then
     : # custom base url already set
   else
     yellow "     Set ANTHROPIC_BASE_URL if you use a custom proxy."
@@ -108,8 +108,8 @@ else
 fi
 
 # --- Step 6: Statusline ---
-if [ -f "$REPO_DIR/setup/statusline/setup-statusline.sh" ]; then
-  bash "$REPO_DIR/setup/statusline/setup-statusline.sh"
+if [ -f "$REPO_DIR/statusline/setup-statusline.sh" ]; then
+  bash "$REPO_DIR/statusline/setup-statusline.sh"
   green "✓ Statusline installed"
 fi
 
