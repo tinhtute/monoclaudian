@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+
+jobs:
+  mods:
+    # Pure guard logic of the mods (rm block, secret/private-URL guard,
+    # compaction rules, cache-guard threshold) runs under plain `bun test`.
+    # Only the explicit rules.spec.ts files run: register.test.ts and
+    # band.test.tsx need the private claude-code/testing kit and run via
+    # `claude plugin test`, not here.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2.2.0
+        with:
+          bun-version: 1.4.1
+
+      - name: ninja-kit pure tests
+        working-directory: mods/ninja-kit
+        run: bun test hooks/rules.spec.ts
+
+      - name: cache-guard pure tests
+        working-directory: mods/cache-guard
+        run: bun test hooks/rules.spec.ts
+
+  agent-models:
+    # models.json role -> model policy matches agents/*.md frontmatter.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check agent model policy
+        run: bash scripts/test-agent-models.sh
