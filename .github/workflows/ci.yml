@@ -36,3 +36,12 @@ jobs:
       - uses: actions/checkout@v4
       - name: Check agent model policy
         run: bash scripts/test-agent-models.sh
+
+  skills:
+    # Every skills/*/SKILL.md has frontmatter with name == directory and a
+    # non-empty description.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate skill frontmatter
+        run: bash scripts/validate-skills.sh
