@@ -9,7 +9,7 @@
 #   1. Copies CLAUDE.md, rules/, agents/ (test-runner), mods/ to ~/.claude/
 #   2. Installs statusline
 #   3. Handles settings.json (copy if new, show diff if existing)
-#   4. Installs all skills via npx skills add
+#   4. Installs all skills via npx skills add (monoharness, then this repo's skills/)
 
 set -euo pipefail
 
@@ -117,6 +117,7 @@ fi
 echo ""
 echo "Installing skills..."
 npx skills add "git@github.com:tinhtute/monoharness.git" -a claude-code codex pi -g -y
+npx skills add "git@github.com:tinhtute/monoclaudian.git" -a claude-code codex pi -g -y
 green "✓ Skills installed"
 
 # --- Step 8: Version stamp ---
