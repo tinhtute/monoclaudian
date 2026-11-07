@@ -9,8 +9,8 @@
 #   1. Copies CLAUDE.md, rules/, agents/ (test-runner), mods/ to ~/.claude/
 #   2. Installs statusline
 #   3. Handles settings.json (copy if new, show diff if existing)
-#   4. Installs the core harness skills via npx skills add; --all adds the
-#      rarely used ones (see OPTIONAL_* below)
+#   4. Installs every monoharness skill via npx skills add; --all also adds
+#      this repo's on-demand skills/
 #
 # Usage: bash install.sh [--all]
 
