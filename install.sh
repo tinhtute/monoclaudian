@@ -9,9 +9,22 @@
 #   1. Copies CLAUDE.md, rules/, agents/ (test-runner), mods/ to ~/.claude/
 #   2. Installs statusline
 #   3. Handles settings.json (copy if new, show diff if existing)
-#   4. Installs all skills via npx skills add (monoharness, then this repo's skills/)
+#   4. Installs the core harness skills via npx skills add; --all adds the
+#      rarely used ones (see OPTIONAL_* below)
+#
+# Usage: bash install.sh [--all]
 
 set -euo pipefail
+
+ALL_SKILLS=0
+[ "${1:-}" = "--all" ] && ALL_SKILLS=1
+
+# Core monoharness skills: the workflow chain and what its playbooks call.
+CORE_HARNESS_SKILLS="mono brainstorm to-plan work check handoff watzup retro think hunt learn git read mono-write"
+# Rarely used (0 calls in 30 days): installed only with --all or on demand, e.g.
+#   npx skills add git@github.com:tinhtute/monoharness.git -s arena -a claude-code -g -y
+OPTIONAL_HARNESS_SKILLS="ambition arena librarian"
+# This repo's skills are all on demand; --all installs them.
 
 REPO_DIR="$(cd "$(dirname "$0")" && pwd)"
 CLAUDE_DIR="$HOME/.claude"
@@ -116,9 +129,15 @@ fi
 # --- Step 7: Skills ---
 echo ""
 echo "Installing skills..."
-npx skills add "git@github.com:tinhtute/monoharness.git" -a claude-code codex pi -g -y
-npx skills add "git@github.com:tinhtute/monoclaudian.git" -a claude-code codex pi -g -y
-green "✓ Skills installed"
+if [ "$ALL_SKILLS" = 1 ]; then
+  npx skills add "git@github.com:tinhtute/monoharness.git" -a claude-code codex pi -g -y
+  npx skills add "git@github.com:tinhtute/monoclaudian.git" -a claude-code codex pi -g -y
+  green "✓ Skills installed (all)"
+else
+  # shellcheck disable=SC2086
+  npx skills add "git@github.com:tinhtute/monoharness.git" -s $CORE_HARNESS_SKILLS -a claude-code codex pi -g -y
+  green "✓ Core skills installed; on demand: $OPTIONAL_HARNESS_SKILLS and this repo's skills/ (bash install.sh --all)"
+fi
 
 # --- Step 8: Version stamp ---
 if git -C "$REPO_DIR" rev-parse HEAD >/dev/null 2>&1; then
