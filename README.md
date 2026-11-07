@@ -12,7 +12,7 @@ bash install.sh
 
 After install: edit `~/.claude/settings.json` → set `ANTHROPIC_AUTH_TOKEN`.
 
-`install.sh` also installs the core harness skills from monoharness (the workflow chain and what its playbooks call). The rarely used ones, `ambition`, `arena`, `librarian` and every skill in this repository (see [Skills](#skills)), install only with `bash install.sh --all` or on demand: `npx skills add git@github.com:tinhtute/<repo>.git -s <name> -a claude-code -g -y`. It does not install the harness agents; run monoharness's `scripts/install-agents.sh` from a monoharness checkout for those.
+`install.sh` also installs every harness skill from monoharness, since its playbooks call each one. This repository's own skills (see [Skills](#skills)) install only with `bash install.sh --all` or on demand: `npx skills add git@github.com:tinhtute/monoclaudian.git -s <name> -a claude-code -g -y`. It does not install the harness agents; run monoharness's `scripts/install-agents.sh` from a monoharness checkout for those.
 
 ## Contents
 
