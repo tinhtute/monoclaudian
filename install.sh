@@ -20,11 +20,11 @@ ALL_SKILLS=0
 [ "${1:-}" = "--all" ] && ALL_SKILLS=1
 
 # Core monoharness skills: the workflow chain and what its playbooks call.
-CORE_HARNESS_SKILLS="mono brainstorm to-plan work check handoff watzup retro think hunt learn git read mono-write"
-# Rarely used (0 calls in 30 days): installed only with --all or on demand, e.g.
-#   npx skills add git@github.com:tinhtute/monoharness.git -s arena -a claude-code -g -y
-OPTIONAL_HARNESS_SKILLS="ambition arena librarian"
-# This repo's skills are all on demand; --all installs them.
+# Every monoharness skill is core: playbooks call ambition (ambition), arena
+# (fanout) and librarian (feature, perf) even when they run rarely.
+CORE_HARNESS_SKILLS="mono brainstorm to-plan work check handoff watzup retro think hunt learn ambition arena git read librarian mono-write"
+# This repo's skills are on demand; --all installs them, or e.g.
+#   npx skills add git@github.com:tinhtute/monoclaudian.git -s tldraw-diagram -a claude-code -g -y
 
 REPO_DIR="$(cd "$(dirname "$0")" && pwd)"
 CLAUDE_DIR="$HOME/.claude"
@@ -136,7 +136,7 @@ if [ "$ALL_SKILLS" = 1 ]; then
 else
   # shellcheck disable=SC2086
   npx skills add "git@github.com:tinhtute/monoharness.git" -s $CORE_HARNESS_SKILLS -a claude-code codex pi -g -y
-  green "✓ Core skills installed; on demand: $OPTIONAL_HARNESS_SKILLS and this repo's skills/ (bash install.sh --all)"
+  green "✓ Core skills installed; on demand: this repo's skills/ (bash install.sh --all)"
 fi
 
 # --- Step 8: Version stamp ---
