@@ -50,5 +50,10 @@
         "repo": "openai/codex-plugin-cc"
       }
     }
+  },
+  "permissions": {
+    "deny": [
+      "Agent(Explore)"
+    ]
   }
 }
