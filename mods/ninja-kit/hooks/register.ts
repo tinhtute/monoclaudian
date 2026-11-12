@@ -4,7 +4,7 @@ import { compactInstructions, guard, guardDeny, RM, rmDeny } from './rules.ts'
 
 export { COMPACT_RULES, privateUrl } from './rules.ts'
 
-const PLANS = '.harness/plans/active'
+const PLANS = '.monows/plans/active'
 const CONTEXT = '.claude/context.md'
 
 // 2. Footer label: active plan + checkbox progress (SessionMode draws it bare, unlike $.ui.status)
