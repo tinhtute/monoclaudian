@@ -2,7 +2,7 @@
 
 Claude Code–specific setup for a new machine: global `CLAUDE.md`, rules, the `settings.json` template, the agent model policy, Claude mods, the statusline, and the `test-runner` agent. `install.sh` installs them into `~/.claude/`.
 
-The portable harness (skills, the `zharness` CLI, the `.harness/` protocol, and the `mono-lead` / `mono-worker` / `mono-verifier` agents) lives in [monoharness](https://github.com/tinhtute/monoharness). This repository only holds what is specific to Claude Code.
+The portable harness (skills, the `zharness` CLI, the `.monows/` protocol, and the `mono-lead` / `mono-worker` / `mono-verifier` agents) lives in [monoharness](https://github.com/tinhtute/monoharness). This repository only holds what is specific to Claude Code.
 
 ## Quick start
 
@@ -53,7 +53,7 @@ General-purpose skills that the monoharness SDLC workflow does not use. Each liv
 
 `ninja-kit` holds the tool guards (`rm` → `trash`, sensitive files, private URLs to web tools), the compaction rule reminder, and an active-plan footer. Test it with `claude plugin test mods/ninja-kit`.
 
-The footer reads plans from the hardcoded path `.harness/plans/active` in the current repository. That is the zharness plan layout from [monoharness](https://github.com/tinhtute/monoharness); in a repository without that layout the footer shows nothing. The path is not configurable.
+The footer reads plans from the hardcoded path `.monows/plans/active` in the current repository. That is the zharness plan layout from [monoharness](https://github.com/tinhtute/monoharness); in a repository without that layout the footer shows nothing. The path is not configurable.
 
 `cache-guard` shows a band above the prompt when the model or effort changes while context is at or above `threshold` percent (default 40, set under `pluginConfigs."cache-guard".options`), with Compact and Skip buttons, because the switch drops the prompt cache. Test it with `claude plugin test mods/cache-guard`.
 

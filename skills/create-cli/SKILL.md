@@ -112,7 +112,7 @@ Like greenfield Phase 3, ordered to minimize breakage: non-breaking additions (n
 
 ## Output Format
 
-Save to: `.harness/plans/active/cli-{name}.md`, one plan with a `## Spec` and a `## Roadmap` section. IF another plan is already active under `.harness/plans/active/` → append `## CLI Spec` and `## CLI Roadmap` sections to it instead of creating a new file.
+Save to: `.monows/plans/active/cli-{name}.md`, one plan with a `## Spec` and a `## Roadmap` section. IF another plan is already active under `.monows/plans/active/` → append `## CLI Spec` and `## CLI Roadmap` sections to it instead of creating a new file.
 
 These integrate with `/brainstorm → /to-plan → /work` workflow.
 
