@@ -1,6 +1,6 @@
 import { expect, test } from 'bun:test'
 
-import { COMPACT_RULES, RM, compactInstructions, guard, guardDeny, privateUrl, rmDeny } from './rules.ts'
+import { bypassed, COMPACT_RULES, RM, rmToTrash, findToTrash, forceToLease, saferCommand, compactInstructions, guard, guardDeny, privateUrl, rmDeny } from './rules.ts'
 
 test('RM matches rm as a command word', () => {
   for (const c of ['rm -rf build', 'cd x && rm a', 'sudo rm f', 'ls; rm a', 'a | xargs rm', '(rm a)', 'echo hi\nrm a', 'rm']) {
@@ -79,4 +79,42 @@ test('compaction keeps the hard rules and the user instructions', () => {
   expect(compactInstructions('focus on the plan')).toBe(`focus on the plan\n\n${COMPACT_RULES}`)
   expect(compactInstructions(undefined)).toBe(COMPACT_RULES)
   expect(compactInstructions('')).toBe(COMPACT_RULES)
+})
+
+test('bypassed matches listed projects and their subdirs only', () => {
+  const list = '# bypass\n/home/u/Lab/a/\n\n/home/u/b # note\n'
+  expect(bypassed(list, '/home/u/Lab/a')).toBe(true)
+  expect(bypassed(list, '/home/u/Lab/a/sub')).toBe(true)
+  expect(bypassed(list, '/home/u/b')).toBe(true)
+  expect(bypassed(list, '/home/u/Lab/ab')).toBe(false)
+  expect(bypassed(list, '/home/u')).toBe(false)
+  expect(bypassed('', '/home/u/b')).toBe(false)
+})
+
+test('rmToTrash rewrites every rm command word, nothing else', () => {
+  expect(rmToTrash('rm -rf dist')).toBe('trash -rf dist')
+  expect(rmToTrash('cd x && rm a; sudo rm b | xargs rm')).toBe('cd x && trash a; sudo trash b | xargs trash')
+  expect(rmToTrash('echo rm; git rm x; npm run rmdir')).toBe('echo rm; git rm x; npm run rmdir')
+})
+
+test('findToTrash rewrites find deletes only', () => {
+  expect(findToTrash('find . -name __pycache__ -exec rm -rf {} +')).toBe('find . -name __pycache__ -exec trash -rf {} +')
+  expect(findToTrash('find dist -type f -delete')).toBe('find dist -type f -prune -exec trash {} +')
+  expect(findToTrash('find . -name "*.log" -delete; echo done')).toBe('find . -name "*.log" -prune -exec trash {} +; echo done')
+  expect(findToTrash('find . -name x -print; grep -delete y')).toBe('find . -name x -print; grep -delete y')
+})
+
+test('forceToLease rewrites only git push force flags', () => {
+  expect(forceToLease('git push --force origin feat')).toBe('git push --force-with-lease origin feat')
+  expect(forceToLease('git -C repo push -f')).toBe('git -C repo push --force-with-lease')
+  expect(forceToLease('git push --force-with-lease')).toBe('git push --force-with-lease')
+  expect(forceToLease('git push origin x && cp -f a b')).toBe('git push origin x && cp -f a b')
+  expect(forceToLease('git checkout -f main')).toBe('git checkout -f main')
+  expect(forceToLease('probe \'{"command":"git push -f x"}\'')).toBe('probe \'{"command":"git push -f x"}\'')
+  expect(forceToLease('assert(bash("git push --force"))')).toBe('assert(bash("git push --force"))')
+})
+
+test('saferCommand composes every rewrite and leaves harmless commands alone', () => {
+  expect(saferCommand('rm a && find . -delete && git push -f')).toBe('trash a && find . -prune -exec trash {} + && git push --force-with-lease')
+  for (const c of ['git rm x', 'echo rm', 'ls -f', 'git fetch -f', 'npm run rmdir']) expect(saferCommand(c)).toBe(c)
 })

@@ -1,11 +1,21 @@
 import type { EngineInterface, Register } from 'claude-code'
 
-import { compactInstructions, guard, guardDeny, RM, rmDeny } from './rules.ts'
+import { bypassed, compactInstructions, guard, guardDeny, saferCommand } from './rules.ts'
 
 export { COMPACT_RULES, privateUrl } from './rules.ts'
 
 const PLANS = '.monows/plans/active'
 const CONTEXT = '.claude/context.md'
+
+// Projects listed in ~/.claude/guard-bypass skip the secret-file and private-URL guards
+async function guardsOff($: EngineInterface): Promise<boolean> {
+  const file = `${$.plugin.root.replace(/\/\.claude\/.*$/, '')}/.claude/guard-bypass`
+  try {
+    return (await $.fs.exists(file)) && bypassed((await $.fs.read(file)) as string, await $.session.root())
+  } catch {
+    return false
+  }
+}
 
 // 2. Footer label: active plan + checkbox progress (SessionMode draws it bare, unlike $.ui.status)
 let plan: string | undefined
@@ -33,16 +43,16 @@ async function refresh($: EngineInterface) {
 }
 
 export const register: Register = on => {
-  // 1. Guard: rm -> trash
-  on('tool.call', { tool: 'Bash' }, ($, e, next) =>
-    RM.test(e.command)
-      ? { deny: rmDeny($.plugin.name) }
-      : next(e),
-  )
+  // 1. Safer rewrites (rm/find -> trash, push --force -> --force-with-lease), always (the bypass list does not apply)
+  on('tool.call', { tool: 'Bash' }, ($, e, next) => {
+    const command = saferCommand(e.command)
+    return command === e.command ? next(e) : next({ ...e, command })
+  })
 
   // 3. Guards: secrets on disk, private URLs to third parties
-  on('tool.call', ($, e, next) => {
+  on('tool.call', async ($, e, next) => {
     const why = guard(e as unknown as { tool: string } & Record<string, unknown>)
+    if (why && (await guardsOff($))) return next(e)
     return why ? { deny: guardDeny($.plugin.name, e.tool, why) } : next(e)
   })
 
