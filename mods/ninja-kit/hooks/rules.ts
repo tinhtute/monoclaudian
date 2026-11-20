@@ -3,6 +3,21 @@
 
 // `rm` as a command word: start of line or after ; & | ( or sudo/xargs
 export const RM = /(^|[;&|(]\s*|\b(sudo|xargs)\s+)rm(\s|$)/m
+// Every `rm` command word becomes `trash` (trash-cli takes rm's -r/-f/-d/-i)
+export const rmToTrash = (command: string): string =>
+  command.replace(new RegExp(RM.source, 'gm'), (_, pre: string, _cmd: string, post: string) => `${pre}trash${post}`)
+// `find ... -delete` / `-exec rm [-flags] ...` -> `-exec trash ...`
+const FIND = /(?<=(?:^|[;&|(]\s*|\b(?:sudo|xargs)\s+))find\b[^;&|\n]*/gm
+export const findToTrash = (command: string): string =>
+  command.replace(FIND, seg => seg
+    .replace(/-exec\s+rm((?:\s+-\w+)*)\s/g, '-exec trash$1 ')
+    .replace(/(^|\s)-delete(?=\s|$)/g, '$1-prune -exec trash {} +'))
+// `git push --force` / `-f` -> `--force-with-lease` (refuses to clobber commits you have not seen)
+const PUSH = /(?<=(?:^|[;&|(]\s*|\bsudo\s+))git\b[^;&|\n]*?\spush\b[^;&|\n]*/gm
+export const forceToLease = (command: string): string =>
+  command.replace(PUSH, seg => seg.replace(/(\s)(?:--force|-f)(?=\s|$)/g, '$1--force-with-lease'))
+// Every safer rewrite, applied whatever the bypass list says
+export const saferCommand = (command: string): string => forceToLease(findToTrash(rmToTrash(command)))
 export const COMPACT_RULES = 'Keep these rules verbatim in the summary: AskUserQuestion tool, trash not rm, prove before done, read before edit, minimal change only.'
 
 // 3. Guards: secrets on disk, private URLs to third parties
@@ -58,3 +73,9 @@ export const guardDeny = (plugin: string, tool: string, why: string): string => 
 // Instructions handed to the summarizer: the user's own, then the hard rules.
 export const compactInstructions = (instructions: string | undefined | null): string =>
   [instructions, COMPACT_RULES].filter(Boolean).join('\n\n')
+
+// Guard bypass: projects listed (one absolute path per line, # comments) skip every guard, subdirs included
+export function bypassed(list: string, root: string): boolean {
+  return list.split('\n').map(l => l.replace(/#.*/, '').trim().replace(/\/+$/, ''))
+    .some(p => p && (root === p || root.startsWith(p + '/')))
+}
