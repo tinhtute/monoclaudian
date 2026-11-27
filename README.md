@@ -38,7 +38,7 @@ General-purpose skills that the monoharness SDLC workflow does not use. Each liv
 | `prompt-leverage` | Turns a raw prompt into an execution-ready instruction set for an agent |
 | `create-skill` | Creates or updates skills with progressive disclosure and lean context |
 | `create-cli` | Designs CLI interfaces and a framework and shipping roadmap |
-| `tldraw-diagram` | Draws architecture or workflow diagrams on tldraw.com boards through the tldraw MCP and exports PNGs |
+| `tldraw-diagram` | Draws architecture or workflow diagrams on tldraw.com boards through the tldraw MCP, falls back to the tldraw offline app when the MCP is missing, and exports PNGs |
 | `turbo-mono-platform` | Scaffolds and reviews Turborepo full-stack TypeScript monorepos |
 
 `evals/` is the eval set for the `write` skill: each `evals/NN-*/prompt.md` loads `skills/write` and its `graders/` score the result.
