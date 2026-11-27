@@ -1,6 +1,6 @@
 ---
 name: tldraw-diagram
-version: "2.0.0"
+version: "2.1.0"
 description: "Draw high-level architecture or workflow diagrams on a tldraw.com board through the tldraw MCP and export PNGs. Use when the user asks for a diagram, topology, or flow drawn in tldraw."
 argument-hint: "[what to draw] [output PNG path]"
 compatibility: Needs the tldraw MCP (https://mcp.tldraw.com/mcp) connected and signed in, a browser tab on the board, and gh; the PNG export needs a host that can run a script over MCP results
@@ -57,13 +57,13 @@ Output: one tldraw.com board per diagram, one PNG, and the board URL recorded ne
 
 - A host that returns the image's base64 `data` instead: write it to a temp file and run `base64 -d < tmp > out`.
 - `file` must report `PNG image data`; otherwise read the text items for the error.
-- The screenshot crops tight to the shapes and can clip the bottom card borders; the ops end with a white `margin` path 50 below the lowest card to prevent that.
+- The screenshot crops tight to the shapes; the ops start with a white `margin_top` rule and end with a white `margin` rule, which pad the PNG 32px on every side.
 - One screenshot fits a limited number of text shapes; when the result says the page is too dense, ask the user for the manual export below.
 - Fallback when the host cannot run a script over MCP results: the user opens the board, selects all, picks Export as → PNG on tldraw.com, and saves it to the agreed path.
 
 ## Notes
 
-- apply_ops has no font, arrow bend, elbow routing or anchor control: arrows bind to card borders and route straight. Place cards so arrows do not cross.
+- apply_ops has no font, arrow bend, elbow routing, anchor, vertical text alignment or oval geo: arrows bind to card borders and route straight, so place cards so arrows do not cross. The style works around the rest (`align:'start'`, stadium paths, `resize` scale for text).
 - `connect` with an existing arrow id replaces that arrow, so restyling an edge needs no remove.
 - A box sizes to its text unless given `w`/`h`; put the card's words in the box's own `text` with `\n` breaks, not in labels laid over it.
 - A user style change (colors, pill size) updates that style's file and `assets/architecture.ops.json`; a new look gets its own `styles/<name>.md`.
